@@ -22,7 +22,11 @@ const preparedProducts = productsFromServer.map(product => {
   };
 });
 
-const getProductsFilteredAndSorted = (prePreparedProducts, filterSettings) => {
+const getProductsFilteredAndSorted = (
+  prePreparedProducts,
+  filterSettings,
+  sortSettings,
+) => {
   let preVisibleProducts = [...prePreparedProducts];
 
   if (filterSettings.filterProductsByOwner) {
@@ -47,6 +51,16 @@ const getProductsFilteredAndSorted = (prePreparedProducts, filterSettings) => {
     });
   }
 
+  if (sortSettings.sortType) {
+    if (sortSettings.sortType === 'ID') {
+      preVisibleProducts.sort((a, b) => {
+        const result = a.id - b.id;
+
+        return sortSettings.sortDirectionNumber ? result * -1 : result;
+      });
+    }
+  }
+
   return preVisibleProducts;
 };
 
@@ -57,9 +71,38 @@ export const App = () => {
     filterProductsByIncludes: '',
   });
 
+  const [sortInstructions, setSortInstructions] = React.useState({
+    sortType: '',
+    sortDirectionNumber: 0,
+  });
+
+  const handleSortTypeChange = type => {
+    setSortInstructions(prevSortInstructions => {
+      if (prevSortInstructions.sortType !== type) {
+        return {
+          sortDirectionNumber: 0,
+          sortType: type,
+        };
+      }
+
+      if (prevSortInstructions.sortDirectionNumber === 1) {
+        return {
+          sortType: '',
+          sortDirectionNumber: 0,
+        };
+      }
+
+      return {
+        ...prevSortInstructions,
+        sortDirectionNumber: prevSortInstructions.sortDirectionNumber + 1,
+      };
+    });
+  };
+
   const visibleProducts = getProductsFilteredAndSorted(
     preparedProducts,
     filterInstructions,
+    sortInstructions,
   );
 
   // console.log(filterInstructions.filterProductsByCategory);
@@ -221,7 +264,6 @@ export const App = () => {
                   {category.title}
                 </a>
               ))}
-
             </div>
 
             <div className="panel-block">
@@ -252,9 +294,25 @@ export const App = () => {
                   <th>
                     <span className="is-flex is-flex-wrap-nowrap">
                       ID
-                      <a href="#/">
+                      <a href="#/" onClick={() => handleSortTypeChange('ID')}>
                         <span className="icon">
-                          <i data-cy="SortIcon" className="fas fa-sort" />
+                          <i
+                            data-cy="SortIcon"
+                            className={cn(
+                              'fas',
+                              { 'fa-sort': sortInstructions.sortType !== 'ID' },
+                              {
+                                'fa-sort-up':
+                                  sortInstructions.sortType === 'ID' &&
+                                  sortInstructions.sortDirectionNumber === 0,
+                              },
+                              {
+                                'fa-sort-down':
+                                  sortInstructions.sortType === 'ID' &&
+                                  sortInstructions.sortDirectionNumber === 1,
+                              },
+                            )}
+                          />
                         </span>
                       </a>
                     </span>
@@ -263,7 +321,10 @@ export const App = () => {
                   <th>
                     <span className="is-flex is-flex-wrap-nowrap">
                       Product
-                      <a href="#/">
+                      <a
+                        href="#/"
+                        onClick={() => handleSortTypeChange('Product')}
+                      >
                         <span className="icon">
                           <i data-cy="SortIcon" className="fas fa-sort-down" />
                         </span>
@@ -274,7 +335,10 @@ export const App = () => {
                   <th>
                     <span className="is-flex is-flex-wrap-nowrap">
                       Category
-                      <a href="#/">
+                      <a
+                        href="#/"
+                        onClick={() => handleSortTypeChange('Category')}
+                      >
                         <span className="icon">
                           <i data-cy="SortIcon" className="fas fa-sort-up" />
                         </span>
@@ -285,7 +349,7 @@ export const App = () => {
                   <th>
                     <span className="is-flex is-flex-wrap-nowrap">
                       User
-                      <a href="#/">
+                      <a href="#/" onClick={() => handleSortTypeChange('User')}>
                         <span className="icon">
                           <i data-cy="SortIcon" className="fas fa-sort" />
                         </span>
@@ -304,7 +368,7 @@ export const App = () => {
                       </td>
 
                       <td data-cy="ProductName">{product.name}</td>
-                      <td data-cy="ProductCategory">{`${product.category.ownerId} - ${product.category.title}`}</td>
+                      <td data-cy="ProductCategory">{`${product.category.icon} - ${product.category.title}`}</td>
 
                       <td
                         data-cy="ProductUser"
