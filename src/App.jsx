@@ -35,7 +35,16 @@ const getProductsFilteredAndSorted = (prePreparedProducts, filterSettings) => {
     preVisibleProducts = preVisibleProducts.filter(product =>
       product.name
         .toLowerCase()
-        .includes(filterSettings.filterProductsByIncludes.toLowerCase()));
+        // eslint-disable-next-line
+        .includes(filterSettings.filterProductsByIncludes.toLowerCase()),);
+  }
+
+  if (filterSettings.filterProductsByCategory.length > 0) {
+    preVisibleProducts = preVisibleProducts.filter(product => {
+      return filterSettings.filterProductsByCategory.includes(
+        // eslint-disable-next-line
+        product.category.title);
+    });
   }
 
   return preVisibleProducts;
@@ -44,7 +53,7 @@ const getProductsFilteredAndSorted = (prePreparedProducts, filterSettings) => {
 export const App = () => {
   const [filterInstructions, setFilterInstructions] = React.useState({
     filterProductsByOwner: '',
-    filterProductsByCategory: '',
+    filterProductsByCategory: [],
     filterProductsByIncludes: '',
   });
 
@@ -52,6 +61,8 @@ export const App = () => {
     preparedProducts,
     filterInstructions,
   );
+
+  // console.log(filterInstructions.filterProductsByCategory);
 
   const handleSetFilterProductsByOwner = productOwnerName => {
     setFilterInstructions(prevFilterInstructions => {
@@ -67,6 +78,43 @@ export const App = () => {
       return {
         ...prevFilterInstructions,
         filterProductsByIncludes: partOfProductName,
+      };
+    });
+  };
+
+  const handleSetFilterProductsByCategory = categoryName => {
+    setFilterInstructions(prevFilterInstructions => {
+      if (categoryName === 'all') {
+        return {
+          ...prevFilterInstructions,
+          filterProductsByCategory: [],
+        };
+      }
+
+      const isCategoryInState =
+        prevFilterInstructions.filterProductsByCategory.findIndex(
+          category => category === categoryName,
+        );
+
+      if (isCategoryInState >= 0) {
+        const tempCategoriesFilter = [
+          ...prevFilterInstructions.filterProductsByCategory,
+        ];
+
+        tempCategoriesFilter.splice(isCategoryInState, 1);
+
+        return {
+          ...prevFilterInstructions,
+          filterProductsByCategory: [...tempCategoriesFilter],
+        };
+      }
+
+      return {
+        ...prevFilterInstructions,
+        filterProductsByCategory: [
+          ...prevFilterInstructions.filterProductsByCategory,
+          categoryName,
+        ],
       };
     });
   };
@@ -94,6 +142,7 @@ export const App = () => {
 
               {usersFromServer.map(user => (
                 <a
+                  key={user.id}
                   className={cn({
                     'is-active':
                       filterInstructions.filterProductsByOwner === user.name,
@@ -105,18 +154,6 @@ export const App = () => {
                   {user.name}
                 </a>
               ))}
-
-              {/* <a data-cy="FilterUser" href="#/"> */}
-              {/*  User 1 */}
-              {/* </a> */}
-
-              {/* <a data-cy="FilterUser" href="#/" className="is-active"> */}
-              {/*  User 2 */}
-              {/* </a> */}
-
-              {/* <a data-cy="FilterUser" href="#/"> */}
-              {/*  User 3 */}
-              {/* </a> */}
             </p>
 
             <div className="panel-block">
@@ -148,48 +185,43 @@ export const App = () => {
                     />
                   </span>
                 )}
-                {/*<span className="icon is-right">*/}
-                {/*  /!* eslint-disable-next-line jsx-a11y/control-has-associated-label *!/*/}
-                {/*  <button*/}
-                {/*    data-cy="ClearButton"*/}
-                {/*    type="button"*/}
-                {/*    className="delete"*/}
-                {/*  />*/}
-                {/*</span>*/}
               </p>
             </div>
 
             <div className="panel-block is-flex-wrap-wrap">
               <a
+                onClick={() => {
+                  handleSetFilterProductsByCategory('all');
+                }}
                 href="#/"
                 data-cy="AllCategories"
-                className="button is-success mr-6 is-outlined"
+                className={cn('button is-success mr-6', {
+                  'is-outlined':
+                    filterInstructions.filterProductsByCategory.length > 0,
+                })}
               >
                 All
               </a>
 
-              <a
-                data-cy="Category"
-                className="button mr-2 my-1 is-info"
-                href="#/"
-              >
-                Category 1
-              </a>
+              {categoriesFromServer.map(category => (
+                <a
+                  key={category.id}
+                  data-cy="Category"
+                  className={cn('button mr-2 my-1', {
+                    'is-info':
+                      filterInstructions.filterProductsByCategory.includes(
+                        category.title,
+                      ),
+                  })}
+                  href="#/"
+                  onClick={() => {
+                    handleSetFilterProductsByCategory(category.title);
+                  }}
+                >
+                  {category.title}
+                </a>
+              ))}
 
-              <a data-cy="Category" className="button mr-2 my-1" href="#/">
-                Category 2
-              </a>
-
-              <a
-                data-cy="Category"
-                className="button mr-2 my-1 is-info"
-                href="#/"
-              >
-                Category 3
-              </a>
-              <a data-cy="Category" className="button mr-2 my-1" href="#/">
-                Category 4
-              </a>
             </div>
 
             <div className="panel-block">
@@ -197,6 +229,11 @@ export const App = () => {
                 data-cy="ResetAllButton"
                 href="#/"
                 className="button is-link is-outlined is-fullwidth"
+                onClick={() => {
+                  handleSetFilterProductsByOwner('');
+                  handleSetFilterProductsByIncludes('');
+                  handleSetFilterProductsByCategory([]);
+                }}
               >
                 Reset all filters
               </a>
@@ -260,9 +297,8 @@ export const App = () => {
 
               <tbody>
                 {visibleProducts.map(product => {
-                  // console.log(product);
                   return (
-                    <tr data-cy="Product">
+                    <tr data-cy="Product" key={product.id}>
                       <td className="has-text-weight-bold" data-cy="ProductId">
                         {product.id}
                       </td>
@@ -283,45 +319,6 @@ export const App = () => {
                     </tr>
                   );
                 })}
-
-                {/* <tr data-cy="Product"> */}
-                {/*  <td className="has-text-weight-bold" data-cy="ProductId"> */}
-                {/*    1 */}
-                {/*  </td> */}
-
-                {/*  <td data-cy="ProductName">Milk</td> */}
-                {/*  <td data-cy="ProductCategory">🍺 - Drinks</td> */}
-
-                {/*  <td data-cy="ProductUser" className="has-text-link"> */}
-                {/*    Max */}
-                {/*  </td> */}
-                {/* </tr> */}
-
-                {/* <tr data-cy="Product"> */}
-                {/*  <td className="has-text-weight-bold" data-cy="ProductId"> */}
-                {/*    2 */}
-                {/*  </td> */}
-
-                {/*  <td data-cy="ProductName">Bread</td> */}
-                {/*  <td data-cy="ProductCategory">🍞 - Grocery</td> */}
-
-                {/*  <td data-cy="ProductUser" className="has-text-danger"> */}
-                {/*    Anna */}
-                {/*  </td> */}
-                {/* </tr> */}
-
-                {/* <tr data-cy="Product"> */}
-                {/*  <td className="has-text-weight-bold" data-cy="ProductId"> */}
-                {/*    3 */}
-                {/*  </td> */}
-
-                {/*  <td data-cy="ProductName">iPhone</td> */}
-                {/*  <td data-cy="ProductCategory">💻 - Electronics</td> */}
-
-                {/*  <td data-cy="ProductUser" className="has-text-link"> */}
-                {/*    Roma */}
-                {/*  </td> */}
-                {/* </tr> */}
               </tbody>
             </table>
           ) : (
@@ -329,128 +326,6 @@ export const App = () => {
               No products matching selected criteria
             </p>
           )}
-          {/*<p data-cy="NoMatchingMessage">*/}
-          {/*  No products matching selected criteria*/}
-          {/*</p>*/}
-
-          {/*<table*/}
-          {/*  data-cy="ProductTable"*/}
-          {/*  className="table is-striped is-narrow is-fullwidth"*/}
-          {/*>*/}
-          {/*  <thead>*/}
-          {/*    <tr>*/}
-          {/*      <th>*/}
-          {/*        <span className="is-flex is-flex-wrap-nowrap">*/}
-          {/*          ID*/}
-          {/*          <a href="#/">*/}
-          {/*            <span className="icon">*/}
-          {/*              <i data-cy="SortIcon" className="fas fa-sort" />*/}
-          {/*            </span>*/}
-          {/*          </a>*/}
-          {/*        </span>*/}
-          {/*      </th>*/}
-
-          {/*      <th>*/}
-          {/*        <span className="is-flex is-flex-wrap-nowrap">*/}
-          {/*          Product*/}
-          {/*          <a href="#/">*/}
-          {/*            <span className="icon">*/}
-          {/*              <i data-cy="SortIcon" className="fas fa-sort-down" />*/}
-          {/*            </span>*/}
-          {/*          </a>*/}
-          {/*        </span>*/}
-          {/*      </th>*/}
-
-          {/*      <th>*/}
-          {/*        <span className="is-flex is-flex-wrap-nowrap">*/}
-          {/*          Category*/}
-          {/*          <a href="#/">*/}
-          {/*            <span className="icon">*/}
-          {/*              <i data-cy="SortIcon" className="fas fa-sort-up" />*/}
-          {/*            </span>*/}
-          {/*          </a>*/}
-          {/*        </span>*/}
-          {/*      </th>*/}
-
-          {/*      <th>*/}
-          {/*        <span className="is-flex is-flex-wrap-nowrap">*/}
-          {/*          User*/}
-          {/*          <a href="#/">*/}
-          {/*            <span className="icon">*/}
-          {/*              <i data-cy="SortIcon" className="fas fa-sort" />*/}
-          {/*            </span>*/}
-          {/*          </a>*/}
-          {/*        </span>*/}
-          {/*      </th>*/}
-          {/*    </tr>*/}
-          {/*  </thead>*/}
-
-          {/*  <tbody>*/}
-          {/*    {visibleProducts.map(product => {*/}
-          {/*      // console.log(product);*/}
-          {/*      return (*/}
-          {/*        <tr data-cy="Product">*/}
-          {/*          <td className="has-text-weight-bold" data-cy="ProductId">*/}
-          {/*            {product.id}*/}
-          {/*          </td>*/}
-
-          {/*          <td data-cy="ProductName">{product.name}</td>*/}
-          {/*          <td data-cy="ProductCategory">{`${product.category.ownerId} - ${product.category.title}`}</td>*/}
-
-          {/*          <td*/}
-          {/*            data-cy="ProductUser"*/}
-          {/*            className={*/}
-          {/*              product.user.sex === 'm'*/}
-          {/*                ? 'has-text-link'*/}
-          {/*                : 'has-text-danger'*/}
-          {/*            }*/}
-          {/*          >*/}
-          {/*            {product.user.name}*/}
-          {/*          </td>*/}
-          {/*        </tr>*/}
-          {/*      );*/}
-          {/*    })}*/}
-
-          {/*    /!* <tr data-cy="Product"> *!/*/}
-          {/*    /!*  <td className="has-text-weight-bold" data-cy="ProductId"> *!/*/}
-          {/*    /!*    1 *!/*/}
-          {/*    /!*  </td> *!/*/}
-
-          {/*    /!*  <td data-cy="ProductName">Milk</td> *!/*/}
-          {/*    /!*  <td data-cy="ProductCategory">🍺 - Drinks</td> *!/*/}
-
-          {/*    /!*  <td data-cy="ProductUser" className="has-text-link"> *!/*/}
-          {/*    /!*    Max *!/*/}
-          {/*    /!*  </td> *!/*/}
-          {/*    /!* </tr> *!/*/}
-
-          {/*    /!* <tr data-cy="Product"> *!/*/}
-          {/*    /!*  <td className="has-text-weight-bold" data-cy="ProductId"> *!/*/}
-          {/*    /!*    2 *!/*/}
-          {/*    /!*  </td> *!/*/}
-
-          {/*    /!*  <td data-cy="ProductName">Bread</td> *!/*/}
-          {/*    /!*  <td data-cy="ProductCategory">🍞 - Grocery</td> *!/*/}
-
-          {/*    /!*  <td data-cy="ProductUser" className="has-text-danger"> *!/*/}
-          {/*    /!*    Anna *!/*/}
-          {/*    /!*  </td> *!/*/}
-          {/*    /!* </tr> *!/*/}
-
-          {/*    /!* <tr data-cy="Product"> *!/*/}
-          {/*    /!*  <td className="has-text-weight-bold" data-cy="ProductId"> *!/*/}
-          {/*    /!*    3 *!/*/}
-          {/*    /!*  </td> *!/*/}
-
-          {/*    /!*  <td data-cy="ProductName">iPhone</td> *!/*/}
-          {/*    /!*  <td data-cy="ProductCategory">💻 - Electronics</td> *!/*/}
-
-          {/*    /!*  <td data-cy="ProductUser" className="has-text-link"> *!/*/}
-          {/*    /!*    Roma *!/*/}
-          {/*    /!*  </td> *!/*/}
-          {/*    /!* </tr> *!/*/}
-          {/*  </tbody>*/}
-          {/*</table>*/}
         </div>
       </div>
     </div>
