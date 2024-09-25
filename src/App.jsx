@@ -31,14 +31,21 @@ const getProductsFilteredAndSorted = (prePreparedProducts, filterSettings) => {
     );
   }
 
+  if (filterSettings.filterProductsByIncludes) {
+    preVisibleProducts = preVisibleProducts.filter(product =>
+      product.name
+        .toLowerCase()
+        .includes(filterSettings.filterProductsByIncludes.toLowerCase()));
+  }
+
   return preVisibleProducts;
 };
 
 export const App = () => {
-  console.log(preparedProducts[0]);
   const [filterInstructions, setFilterInstructions] = React.useState({
     filterProductsByOwner: '',
     filterProductsByCategory: '',
+    filterProductsByIncludes: '',
   });
 
   const visibleProducts = getProductsFilteredAndSorted(
@@ -51,6 +58,15 @@ export const App = () => {
       return {
         ...prevFilterInstructions,
         filterProductsByOwner: productOwnerName,
+      };
+    });
+  };
+
+  const handleSetFilterProductsByIncludes = partOfProductName => {
+    setFilterInstructions(prevFilterInstructions => {
+      return {
+        ...prevFilterInstructions,
+        filterProductsByIncludes: partOfProductName,
       };
     });
   };
@@ -110,21 +126,36 @@ export const App = () => {
                   type="text"
                   className="input"
                   placeholder="Search"
-                  value="qwe"
+                  value={filterInstructions.filterProductsByIncludes}
+                  onChange={event =>
+                    handleSetFilterProductsByIncludes(
+                      event.target.value.trimStart(),
+                    )
+                  }
                 />
 
                 <span className="icon is-left">
                   <i className="fas fa-search" aria-hidden="true" />
                 </span>
-
-                <span className="icon is-right">
-                  {/* eslint-disable-next-line jsx-a11y/control-has-associated-label */}
-                  <button
-                    data-cy="ClearButton"
-                    type="button"
-                    className="delete"
-                  />
-                </span>
+                {filterInstructions.filterProductsByIncludes && (
+                  <span className="icon is-right">
+                    {/* eslint-disable-next-line jsx-a11y/control-has-associated-label */}
+                    <button
+                      data-cy="ClearButton"
+                      type="button"
+                      className="delete"
+                      onClick={() => handleSetFilterProductsByIncludes('')}
+                    />
+                  </span>
+                )}
+                {/*<span className="icon is-right">*/}
+                {/*  /!* eslint-disable-next-line jsx-a11y/control-has-associated-label *!/*/}
+                {/*  <button*/}
+                {/*    data-cy="ClearButton"*/}
+                {/*    type="button"*/}
+                {/*    className="delete"*/}
+                {/*  />*/}
+                {/*</span>*/}
               </p>
             </div>
 
@@ -174,128 +205,252 @@ export const App = () => {
         </div>
 
         <div className="box table-container">
-          <p data-cy="NoMatchingMessage">
-            No products matching selected criteria
-          </p>
+          {visibleProducts.length ? (
+            <table
+              data-cy="ProductTable"
+              className="table is-striped is-narrow is-fullwidth"
+            >
+              <thead>
+                <tr>
+                  <th>
+                    <span className="is-flex is-flex-wrap-nowrap">
+                      ID
+                      <a href="#/">
+                        <span className="icon">
+                          <i data-cy="SortIcon" className="fas fa-sort" />
+                        </span>
+                      </a>
+                    </span>
+                  </th>
 
-          <table
-            data-cy="ProductTable"
-            className="table is-striped is-narrow is-fullwidth"
-          >
-            <thead>
-              <tr>
-                <th>
-                  <span className="is-flex is-flex-wrap-nowrap">
-                    ID
-                    <a href="#/">
-                      <span className="icon">
-                        <i data-cy="SortIcon" className="fas fa-sort" />
-                      </span>
-                    </a>
-                  </span>
-                </th>
+                  <th>
+                    <span className="is-flex is-flex-wrap-nowrap">
+                      Product
+                      <a href="#/">
+                        <span className="icon">
+                          <i data-cy="SortIcon" className="fas fa-sort-down" />
+                        </span>
+                      </a>
+                    </span>
+                  </th>
 
-                <th>
-                  <span className="is-flex is-flex-wrap-nowrap">
-                    Product
-                    <a href="#/">
-                      <span className="icon">
-                        <i data-cy="SortIcon" className="fas fa-sort-down" />
-                      </span>
-                    </a>
-                  </span>
-                </th>
+                  <th>
+                    <span className="is-flex is-flex-wrap-nowrap">
+                      Category
+                      <a href="#/">
+                        <span className="icon">
+                          <i data-cy="SortIcon" className="fas fa-sort-up" />
+                        </span>
+                      </a>
+                    </span>
+                  </th>
 
-                <th>
-                  <span className="is-flex is-flex-wrap-nowrap">
-                    Category
-                    <a href="#/">
-                      <span className="icon">
-                        <i data-cy="SortIcon" className="fas fa-sort-up" />
-                      </span>
-                    </a>
-                  </span>
-                </th>
+                  <th>
+                    <span className="is-flex is-flex-wrap-nowrap">
+                      User
+                      <a href="#/">
+                        <span className="icon">
+                          <i data-cy="SortIcon" className="fas fa-sort" />
+                        </span>
+                      </a>
+                    </span>
+                  </th>
+                </tr>
+              </thead>
 
-                <th>
-                  <span className="is-flex is-flex-wrap-nowrap">
-                    User
-                    <a href="#/">
-                      <span className="icon">
-                        <i data-cy="SortIcon" className="fas fa-sort" />
-                      </span>
-                    </a>
-                  </span>
-                </th>
-              </tr>
-            </thead>
+              <tbody>
+                {visibleProducts.map(product => {
+                  // console.log(product);
+                  return (
+                    <tr data-cy="Product">
+                      <td className="has-text-weight-bold" data-cy="ProductId">
+                        {product.id}
+                      </td>
 
-            <tbody>
-              {visibleProducts.map(product => {
-                // console.log(product);
-                return (
-                  <tr data-cy="Product">
-                    <td className="has-text-weight-bold" data-cy="ProductId">
-                      {product.id}
-                    </td>
+                      <td data-cy="ProductName">{product.name}</td>
+                      <td data-cy="ProductCategory">{`${product.category.ownerId} - ${product.category.title}`}</td>
 
-                    <td data-cy="ProductName">{product.name}</td>
-                    <td data-cy="ProductCategory">{`${product.category.ownerId} - ${product.category.title}`}</td>
+                      <td
+                        data-cy="ProductUser"
+                        className={
+                          product.user.sex === 'm'
+                            ? 'has-text-link'
+                            : 'has-text-danger'
+                        }
+                      >
+                        {product.user.name}
+                      </td>
+                    </tr>
+                  );
+                })}
 
-                    <td
-                      data-cy="ProductUser"
-                      className={
-                        product.user.sex === 'm'
-                          ? 'has-text-link'
-                          : 'has-text-danger'
-                      }
-                    >
-                      {product.user.name}
-                    </td>
-                  </tr>
-                );
-              })}
+                {/* <tr data-cy="Product"> */}
+                {/*  <td className="has-text-weight-bold" data-cy="ProductId"> */}
+                {/*    1 */}
+                {/*  </td> */}
 
-              {/* <tr data-cy="Product"> */}
-              {/*  <td className="has-text-weight-bold" data-cy="ProductId"> */}
-              {/*    1 */}
-              {/*  </td> */}
+                {/*  <td data-cy="ProductName">Milk</td> */}
+                {/*  <td data-cy="ProductCategory">🍺 - Drinks</td> */}
 
-              {/*  <td data-cy="ProductName">Milk</td> */}
-              {/*  <td data-cy="ProductCategory">🍺 - Drinks</td> */}
+                {/*  <td data-cy="ProductUser" className="has-text-link"> */}
+                {/*    Max */}
+                {/*  </td> */}
+                {/* </tr> */}
 
-              {/*  <td data-cy="ProductUser" className="has-text-link"> */}
-              {/*    Max */}
-              {/*  </td> */}
-              {/* </tr> */}
+                {/* <tr data-cy="Product"> */}
+                {/*  <td className="has-text-weight-bold" data-cy="ProductId"> */}
+                {/*    2 */}
+                {/*  </td> */}
 
-              {/* <tr data-cy="Product"> */}
-              {/*  <td className="has-text-weight-bold" data-cy="ProductId"> */}
-              {/*    2 */}
-              {/*  </td> */}
+                {/*  <td data-cy="ProductName">Bread</td> */}
+                {/*  <td data-cy="ProductCategory">🍞 - Grocery</td> */}
 
-              {/*  <td data-cy="ProductName">Bread</td> */}
-              {/*  <td data-cy="ProductCategory">🍞 - Grocery</td> */}
+                {/*  <td data-cy="ProductUser" className="has-text-danger"> */}
+                {/*    Anna */}
+                {/*  </td> */}
+                {/* </tr> */}
 
-              {/*  <td data-cy="ProductUser" className="has-text-danger"> */}
-              {/*    Anna */}
-              {/*  </td> */}
-              {/* </tr> */}
+                {/* <tr data-cy="Product"> */}
+                {/*  <td className="has-text-weight-bold" data-cy="ProductId"> */}
+                {/*    3 */}
+                {/*  </td> */}
 
-              {/* <tr data-cy="Product"> */}
-              {/*  <td className="has-text-weight-bold" data-cy="ProductId"> */}
-              {/*    3 */}
-              {/*  </td> */}
+                {/*  <td data-cy="ProductName">iPhone</td> */}
+                {/*  <td data-cy="ProductCategory">💻 - Electronics</td> */}
 
-              {/*  <td data-cy="ProductName">iPhone</td> */}
-              {/*  <td data-cy="ProductCategory">💻 - Electronics</td> */}
+                {/*  <td data-cy="ProductUser" className="has-text-link"> */}
+                {/*    Roma */}
+                {/*  </td> */}
+                {/* </tr> */}
+              </tbody>
+            </table>
+          ) : (
+            <p data-cy="NoMatchingMessage">
+              No products matching selected criteria
+            </p>
+          )}
+          {/*<p data-cy="NoMatchingMessage">*/}
+          {/*  No products matching selected criteria*/}
+          {/*</p>*/}
 
-              {/*  <td data-cy="ProductUser" className="has-text-link"> */}
-              {/*    Roma */}
-              {/*  </td> */}
-              {/* </tr> */}
-            </tbody>
-          </table>
+          {/*<table*/}
+          {/*  data-cy="ProductTable"*/}
+          {/*  className="table is-striped is-narrow is-fullwidth"*/}
+          {/*>*/}
+          {/*  <thead>*/}
+          {/*    <tr>*/}
+          {/*      <th>*/}
+          {/*        <span className="is-flex is-flex-wrap-nowrap">*/}
+          {/*          ID*/}
+          {/*          <a href="#/">*/}
+          {/*            <span className="icon">*/}
+          {/*              <i data-cy="SortIcon" className="fas fa-sort" />*/}
+          {/*            </span>*/}
+          {/*          </a>*/}
+          {/*        </span>*/}
+          {/*      </th>*/}
+
+          {/*      <th>*/}
+          {/*        <span className="is-flex is-flex-wrap-nowrap">*/}
+          {/*          Product*/}
+          {/*          <a href="#/">*/}
+          {/*            <span className="icon">*/}
+          {/*              <i data-cy="SortIcon" className="fas fa-sort-down" />*/}
+          {/*            </span>*/}
+          {/*          </a>*/}
+          {/*        </span>*/}
+          {/*      </th>*/}
+
+          {/*      <th>*/}
+          {/*        <span className="is-flex is-flex-wrap-nowrap">*/}
+          {/*          Category*/}
+          {/*          <a href="#/">*/}
+          {/*            <span className="icon">*/}
+          {/*              <i data-cy="SortIcon" className="fas fa-sort-up" />*/}
+          {/*            </span>*/}
+          {/*          </a>*/}
+          {/*        </span>*/}
+          {/*      </th>*/}
+
+          {/*      <th>*/}
+          {/*        <span className="is-flex is-flex-wrap-nowrap">*/}
+          {/*          User*/}
+          {/*          <a href="#/">*/}
+          {/*            <span className="icon">*/}
+          {/*              <i data-cy="SortIcon" className="fas fa-sort" />*/}
+          {/*            </span>*/}
+          {/*          </a>*/}
+          {/*        </span>*/}
+          {/*      </th>*/}
+          {/*    </tr>*/}
+          {/*  </thead>*/}
+
+          {/*  <tbody>*/}
+          {/*    {visibleProducts.map(product => {*/}
+          {/*      // console.log(product);*/}
+          {/*      return (*/}
+          {/*        <tr data-cy="Product">*/}
+          {/*          <td className="has-text-weight-bold" data-cy="ProductId">*/}
+          {/*            {product.id}*/}
+          {/*          </td>*/}
+
+          {/*          <td data-cy="ProductName">{product.name}</td>*/}
+          {/*          <td data-cy="ProductCategory">{`${product.category.ownerId} - ${product.category.title}`}</td>*/}
+
+          {/*          <td*/}
+          {/*            data-cy="ProductUser"*/}
+          {/*            className={*/}
+          {/*              product.user.sex === 'm'*/}
+          {/*                ? 'has-text-link'*/}
+          {/*                : 'has-text-danger'*/}
+          {/*            }*/}
+          {/*          >*/}
+          {/*            {product.user.name}*/}
+          {/*          </td>*/}
+          {/*        </tr>*/}
+          {/*      );*/}
+          {/*    })}*/}
+
+          {/*    /!* <tr data-cy="Product"> *!/*/}
+          {/*    /!*  <td className="has-text-weight-bold" data-cy="ProductId"> *!/*/}
+          {/*    /!*    1 *!/*/}
+          {/*    /!*  </td> *!/*/}
+
+          {/*    /!*  <td data-cy="ProductName">Milk</td> *!/*/}
+          {/*    /!*  <td data-cy="ProductCategory">🍺 - Drinks</td> *!/*/}
+
+          {/*    /!*  <td data-cy="ProductUser" className="has-text-link"> *!/*/}
+          {/*    /!*    Max *!/*/}
+          {/*    /!*  </td> *!/*/}
+          {/*    /!* </tr> *!/*/}
+
+          {/*    /!* <tr data-cy="Product"> *!/*/}
+          {/*    /!*  <td className="has-text-weight-bold" data-cy="ProductId"> *!/*/}
+          {/*    /!*    2 *!/*/}
+          {/*    /!*  </td> *!/*/}
+
+          {/*    /!*  <td data-cy="ProductName">Bread</td> *!/*/}
+          {/*    /!*  <td data-cy="ProductCategory">🍞 - Grocery</td> *!/*/}
+
+          {/*    /!*  <td data-cy="ProductUser" className="has-text-danger"> *!/*/}
+          {/*    /!*    Anna *!/*/}
+          {/*    /!*  </td> *!/*/}
+          {/*    /!* </tr> *!/*/}
+
+          {/*    /!* <tr data-cy="Product"> *!/*/}
+          {/*    /!*  <td className="has-text-weight-bold" data-cy="ProductId"> *!/*/}
+          {/*    /!*    3 *!/*/}
+          {/*    /!*  </td> *!/*/}
+
+          {/*    /!*  <td data-cy="ProductName">iPhone</td> *!/*/}
+          {/*    /!*  <td data-cy="ProductCategory">💻 - Electronics</td> *!/*/}
+
+          {/*    /!*  <td data-cy="ProductUser" className="has-text-link"> *!/*/}
+          {/*    /!*    Roma *!/*/}
+          {/*    /!*  </td> *!/*/}
+          {/*    /!* </tr> *!/*/}
+          {/*  </tbody>*/}
+          {/*</table>*/}
         </div>
       </div>
     </div>
